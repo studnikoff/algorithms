@@ -24,6 +24,11 @@ class Node:
         res = dict((k,v) for k,v in d.items() if v is not None)
         return str(res)
 
+    def __str__(self):
+        import json
+        d = json.loads(repr(self).replace("'", "\""))
+        return json.dumps(d, indent=4)
+
 
 class BST:
     def __init__(self) -> None:
@@ -56,6 +61,15 @@ class BST:
             return self.__get(node.right_node, key)
         else:
             return node.value
+
+    def min(self):
+        return self.__min(self.root)
+
+    def __min(self, node: Node):
+        if node.left_node is None:
+            return node
+        else:
+            return self.__min(node.left_node)
 
     def floor(self, key: int):
         node = self.__floor(self.root, key)
@@ -160,7 +174,39 @@ class BST:
             self.__preorder(node.right_node, queue)
             queue.append(node.key)
 
+    def deletemin(self):
+        self.root = self.__deletemin(self.root)
 
+    def __deletemin(self, node: Node) -> Node:
+        if node.left_node is not None:
+            node.left_node = self.__deletemin(node.left_node)
+            node.count = 1 + self.__size(node.left_node) + self.__size(node.right_node)
+            return node
+        else:
+            return node.right_node
+
+    def delete(self, key: int):
+        self.root = self.__delete(self.root, key)
+
+    def __delete(self, node: Node, key: int):
+        if node is None:
+            return None
+        if node.key < key:
+            node.right_node = self.__delete(node.right_node, key)
+        elif node.key > key:
+            node.left_node = self.__delete(node.left_node, key)
+        else:
+            if node.left_node is None:
+                return node.right_node
+            if node.right_node is None:
+                return node.left_node
+
+            # Hibbard deletion
+            node_min = self.__min(node.right_node)
+            node_min.right_node, node_min.left_node = self.__deletemin(node.right_node), node.left_node
+            node = node_min
+        node.count = 1 + self.__size(node.left_node) + self.__size(node.right_node)
+        return node
 
 if __name__ == '__main__':
     bst = BST()
@@ -204,3 +250,23 @@ if __name__ == '__main__':
     print(bst.inorder())
     print(bst.preorder())
     print(bst.postorder())
+
+    print("Delete Min")
+    print(bst.min())
+
+    print(bst.root)
+    bst.deletemin()
+    print(bst.root)
+    print(bst.inorder())
+
+    bst.put(3, "Hehe")
+    bst.put(0, "Zero")
+    bst.put(10, "Ten")
+
+    print(bst.root)
+    print(bst.inorder())
+
+    bst.delete(5)
+    print(bst.root)
+
+
